@@ -58,6 +58,7 @@ namespace Breakthrough
                     {
                         Console.WriteLine();
                         Console.WriteLine("Current score: " + Score);
+                        // Task 1: Console.WriteLine(Deck.GetNumberOfCards());
                         Console.WriteLine(CurrentLock.GetLockDetails());
                         Console.WriteLine(Sequence.GetCardDisplay());
                         Console.WriteLine(Hand.GetCardDisplay());
@@ -82,6 +83,15 @@ namespace Breakthrough
                                         PlayCardToSequence(CardChoice);
                                     break;
                                 }
+                            case "P":
+                                {
+                                    if (CurrentLock.GetPeekUsed() == false)
+                                    {
+                                        CurrentLock.Peek(Deck);
+                                        CurrentLock.SetPeekUsed(true);
+                                    }
+                                    break;
+                                }
                         }
                         if (CurrentLock.GetLockSolved())
                         {
@@ -100,6 +110,7 @@ namespace Breakthrough
         {
             Score += 10;
             Console.WriteLine("Lock has been solved.  Your score is now: " + Score);
+            CurrentLock.SetPeekUsed(false);
             while (Discard.GetNumberOfCards() > 0)
             {
                 MoveCard(Discard, Deck, Discard.GetCardNumberAt(0));
@@ -149,19 +160,30 @@ namespace Breakthrough
 
         private void PlayCardToSequence(int cardChoice)
         {
+            // task 3
+
+            bool valid = false;
             if (Sequence.GetNumberOfCards() > 0)
             {
                 if (Hand.GetCardDescriptionAt(cardChoice - 1)[0] != Sequence.GetCardDescriptionAt(Sequence.GetNumberOfCards() - 1)[0])
                 {
                     Score += MoveCard(Hand, Sequence, Hand.GetCardNumberAt(cardChoice - 1));
                     GetCardFromDeck(cardChoice);
+                    valid = true;
                 }
             }
             else
             {
                 Score += MoveCard(Hand, Sequence, Hand.GetCardNumberAt(cardChoice - 1));
                 GetCardFromDeck(cardChoice);
+                valid = true;
             }
+            if (valid == false)
+            {
+                Console.WriteLine("Cannot play two cards sequentially.");
+                Console.WriteLine("The card |{0}| you tried to play is the same type as the card played before.", Hand.GetCardDescriptionAt(cardChoice - 1));
+            }
+            
             if (CheckIfLockChallengeMet())
             {
                 Console.WriteLine();
@@ -368,7 +390,14 @@ namespace Breakthrough
         private string GetChoice()
         {
             Console.WriteLine();
-            Console.Write("(D)iscard inspect, (U)se card:> ");
+            if (CurrentLock.GetPeekUsed() == false)
+            {
+                Console.Write("(D)iscard inspect, (U)se card:, (P)eek>");
+            }
+            else
+            {
+                Console.Write("(D)iscard inspect, (U)se card:> ");
+            }
             string Choice = Console.ReadLine().ToUpper();
             return Choice;
         }
@@ -468,6 +497,7 @@ namespace Breakthrough
     class Lock
     {
         protected List<Challenge> Challenges = new List<Challenge>();
+        private bool peekUsed = false;
 
         public virtual void AddChallenge(List<string> condition)
         {
@@ -544,6 +574,24 @@ namespace Breakthrough
         public virtual int GetNumberOfChallenges()
         {
             return Challenges.Count;
+        }
+
+        public virtual void Peek(CardCollection deck)
+        {
+            for (int x = 0; x < 3; x++)
+            {
+                Console.WriteLine(deck.GetCardDescriptionAt(x));
+            }
+        }
+
+        public virtual bool GetPeekUsed()
+        {
+            return peekUsed;
+        }
+
+        public virtual void SetPeekUsed(bool used)
+        {
+            peekUsed = used;
         }
     }
 
